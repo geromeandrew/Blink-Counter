@@ -55,6 +55,8 @@ To get a copy of the project, clone it using Git:
    cd <repository-directory>
    ```
 
+This is the repository-directory: https://github.com/geromeandrew/Blink-Counter.git
+
 ### Install Project Requirements
 
 Ensure all the necessary packages are installed by using the `requirements.txt` file.
@@ -101,8 +103,3 @@ To run the blink detection program, follow these detailed steps:
 
 4. The program will process the video and display the blink count on the screen.
 5. When the video ends, press the `q` key to stop the program because it loops. The final blink count will be displayed, and the program will pause. Press any key to close the final count display.
-
-## Notes
-
-- Ensure that your video file is compatible with OpenCV.
-- If you encounter any issues, ensure that all dependencies are correctly installed and the paths are properly set.

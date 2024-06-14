@@ -1,63 +1,72 @@
 import cv2
+import numpy as np
 from faceMeshModule import faceMeshDetection
 
-cap = cv2.VideoCapture(0)  # Use the webcam as the video source
+def eye_aspect_ratio(eye):
+    A = np.linalg.norm(eye[1] - eye[5])
+    B = np.linalg.norm(eye[2] - eye[4])
+
+    C = np.linalg.norm(eye[0] - eye[3])
+
+    ear = (A + B) / (2.0 * C)
+    return ear
+
+cap = cv2.VideoCapture('Blinking Morse Code _ Hello.mp4') 
 detector = faceMeshDetection()
 
-idList = [22, 23, 24, 26, 110, 157, 158, 159, 160, 161, 130, 243]
-ratioList = []
+leftEyeIndices = [33, 160, 158, 133, 153, 144]
+rightEyeIndices = [362, 385, 387, 263, 373, 380]
+
+EYE_AR_THRESH = 0.25
+EYE_AR_CONSEC_FRAMES = 3
 
 blinkCount = 0
-counterTime = 0
+counter = 0
 color = (255, 0, 255)
 
-run = True
-while run:
+while True:
     success, img = cap.read()
     if not success:
-        print("Failed to capture image from webcam")
-        break
-    
+        break  
+
     img, faces = detector.findFaceMesh(img, draw=False)
     
     if faces:
         face = faces[0]
-        for id in idList:
-            cv2.circle(img, face[id], 5, color, cv2.FILLED)
 
-        leftUp = face[159]
-        leftDown = face[23]
-        leftLeft = face[130]
-        leftRight = face[243]
+        leftEye = np.array([face[i] for i in leftEyeIndices])
+        rightEye = np.array([face[i] for i in rightEyeIndices])
 
-        lenghtVer, _ = detector.findDistance(leftUp, leftDown)
-        lenghtHor, _ = detector.findDistance(leftLeft, leftRight)
+        leftEAR = eye_aspect_ratio(leftEye)
+        rightEAR = eye_aspect_ratio(rightEye)
 
-        cv2.line(img, leftUp, leftDown, (0, 200, 0), 3)
-        cv2.line(img, leftLeft, leftRight, (0, 200, 0), 3)
+        ear = (leftEAR + rightEAR) / 2.0
 
-        ratio = int((lenghtVer / lenghtHor) * 100)
-        ratioList.append(ratio)
-        if len(ratioList) > 3:
-            ratioList.pop(0)
-        ratioAvg = (sum(ratioList) / len(ratioList))
+        if ear < EYE_AR_THRESH:
+            counter += 1
+        else:
+            if counter >= EYE_AR_CONSEC_FRAMES:
+                blinkCount += 1
+            counter = 0
 
-        if ratioAvg < 33 and counterTime == 0:
-            blinkCount += 1
-            counterTime = 1
-            color = (0, 255, 0)
-        if counterTime != 0:
-            counterTime += 1
-            if counterTime > 10:
-                counterTime = 0
-                color = (255, 0, 255)
+        for point in leftEye:
+            cv2.circle(img, tuple(point), 2, color, cv2.FILLED)
+        for point in rightEye:
+            cv2.circle(img, tuple(point), 2, color, cv2.FILLED)
 
-        img = cv2.resize(img, (640, 360))
-        print(f'Blink Count: {blinkCount}')
+    cv2.putText(img, f'Blink Count: {blinkCount}', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
     
     cv2.imshow('Image', img)
-    if cv2.waitKey(1) & 0xFF == ord('q'):  # Press 'q' to exit
-        run = False
+    if cv2.waitKey(1) & 0xFF == ord('q'): 
+        break
 
 cap.release()
 cv2.destroyAllWindows()
+
+final_img = np.zeros((360, 640, 3), dtype=np.uint8)
+cv2.putText(final_img, f'Final Blink Count: {blinkCount}', (10, 180), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 0), 2, cv2.LINE_AA)
+cv2.imshow('Final Count', final_img)
+cv2.waitKey(0) 
+cv2.destroyAllWindows()
+
+print(f'Final Blink Count: {blinkCount}')

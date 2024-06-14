@@ -55,7 +55,7 @@ To get a copy of the project, clone it using Git:
    cd <repository-directory>
    ```
 
-This is the repository-directory: https://github.com/geromeandrew/Blink-Counter.git
+This is the repository-url: https://github.com/geromeandrew/Blink-Counter.git
 
 ### Install Project Requirements
 
